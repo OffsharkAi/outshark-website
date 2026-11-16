@@ -10,7 +10,7 @@
  <button class="primary-button" id="fetch-info" type="button" disabled>Find available formats</button>
  <div class="field"><label for="quality">Available quality</label><select id="quality" disabled><option value="">Best available</option></select></div>
  <button class="primary-button" id="download" type="button" disabled>Start download</button>
- <p id="status" role="status" aria-live="polite"></p>
+ <div class="progress-widget" id="progress-widget" hidden role="group" aria-label="Download processing"><label for="processing-progress">Server processing status <output id="processing-label">In progress</output></label><progress id="processing-progress"></progress><p>ReClip provides a job state rather than a numeric completion percentage.</p></div><p id="status" role="status" aria-live="polite"></p>
  <div id="result" class="output" hidden></div>
 </div>
 <h2>About download progress</h2><p>This ReClip version reports a job status rather than a numerical completion percentage. The interface shows fetching, downloading, completion and errors without inventing a percentage.</p>
