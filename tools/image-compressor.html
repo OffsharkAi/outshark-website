@@ -12,7 +12,8 @@ quality.addEventListener('input',()=>document.getElementById('quality-value').te
 document.getElementById('compress').addEventListener('click',()=>{
  cleanup(); const file=fileInput.files[0]; if(!file){result.hidden=false;result.textContent='Choose an image first.';return;}
  if(!['image/jpeg','image/png','image/webp'].includes(file.type)){result.hidden=false;result.textContent='Please choose a JPEG, PNG or WebP image.';return;}
- if(file.size>20*1024*1024){result.hidden=false;result.textContent='Choose an image under 20 MB.';return;}\n const reader=new FileReader();
+ if(file.size>20*1024*1024){result.hidden=false;result.textContent='Choose an image under 20 MB.';return;}
+ const reader=new FileReader();
  reader.onerror=()=>{result.hidden=false;result.textContent='Could not read this file.';};
  reader.onload=()=>{
   const img=new Image();
@@ -23,7 +24,8 @@ document.getElementById('compress').addEventListener('click',()=>{
    const type='image/webp';
    canvas.toBlob(blob=>{
     if(!blob){result.hidden=false;result.textContent='Compression failed. Try another image.';return;}
-    if(blob.type!=='image/webp'){result.hidden=false;result.textContent='Your browser does not support WebP encoding.';return;}\n    const url=URL.createObjectURL(blob);previousUrl=url; const a=document.createElement('a');a.href=url;a.download='outshark-compressed.'+(blob.type==='image/webp'?'webp':'png');a.textContent='Download compressed image';
+    if(blob.type!=='image/webp'){result.hidden=false;result.textContent='Your browser does not support WebP encoding.';return;}
+    const url=URL.createObjectURL(blob);previousUrl=url; const a=document.createElement('a');a.href=url;a.download='outshark-compressed.'+(blob.type==='image/webp'?'webp':'png');a.textContent='Download compressed image';
     result.hidden=false;result.innerHTML='';
     const info=document.createElement('p');info.textContent=`Original: ${(file.size/1024).toFixed(1)} KB · New: ${(blob.size/1024).toFixed(1)} KB`;
     const note=document.createElement('p');note.textContent=blob.size<file.size?'File size reduced.':'The result is not smaller at this quality setting.';
