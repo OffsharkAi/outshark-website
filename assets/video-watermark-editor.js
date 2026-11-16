@@ -2,6 +2,7 @@
 "use strict";
 const file=document.getElementById("file"),video=document.getElementById("source"),canvas=document.getElementById("preview"),ctx=canvas.getContext("2d"),status=document.getElementById("status"),output=document.getElementById("output"),play=document.getElementById("play"),exportButton=document.getElementById("export");
 const keys=["x","y","w","h"],controls=Object.fromEntries(keys.map(k=>[k,document.getElementById(k)]));
+const progressWrap=document.getElementById("export-progress-wrap"),progressBar=document.getElementById("export-progress"),progressLabel=document.getElementById("export-percent");
 let sourceURL=null,downloadURL=null,animation=0,recorder=null,stream=null,audioContext=null,audioDestination=null,audioSource=null,busy=false;
 const off=document.createElement("canvas"),offctx=off.getContext("2d");
 function msg(t){status.textContent=t;}
@@ -16,7 +17,7 @@ function draw(){
  else if(offctx){off.width=w;off.height=h;offctx.filter="blur(16px)";offctx.drawImage(canvas,x,y,w,h,0,0,w,h);offctx.filter="none";ctx.drawImage(off,x,y,w,h);}
  if(!busy){ctx.save();ctx.strokeStyle="#00ddf5";ctx.lineWidth=Math.max(2,Math.round(vw/350));ctx.setLineDash([9,5]);ctx.strokeRect(x,y,w,h);ctx.restore();}
 }
-function tick(){draw();if(!video.paused&&!video.ended)animation=requestAnimationFrame(tick);}
+function tick(){draw();if(busy&&Number.isFinite(video.duration)&&video.duration>0){const pct=Math.min(99,Math.floor(video.currentTime/video.duration*100));progressBar.value=pct;progressLabel.textContent=pct+"%";}if(!video.paused&&!video.ended)animation=requestAnimationFrame(tick);}
 function cancel(){cancelAnimationFrame(animation);if(!video.paused)video.pause();}
 for(const k of keys)controls[k].addEventListener("input",()=>{document.getElementById(k+"-out").textContent=controls[k].value+"%";if(video.paused)draw();});
 document.getElementById("mode").addEventListener("change",()=>{if(video.paused)draw();});
@@ -46,7 +47,7 @@ exportButton.addEventListener("click",async()=>{
  if(!file.files?.[0]){msg("Choose a video first.");return;}
  if(!canvas.captureStream||!window.MediaRecorder||!ctx){msg("Video export is not supported in this browser. Try desktop Chrome or Edge.");return;}
  const mime=recorderType();if(!mime){msg("This browser has no compatible video recorder format.");return;}
- busy=true;play.disabled=true;exportButton.disabled=true;cancel();clearOutput();
+ busy=true;play.disabled=true;exportButton.disabled=true;cancel();clearOutput();progressWrap.hidden=false;progressBar.value=0;progressLabel.textContent="0%";
  const originalW=video.videoWidth,originalH=video.videoHeight,max=document.getElementById("quality").value;
  const limit=max==="source"?originalW:Math.min(originalW,Number(max)),scale=Math.min(1,limit/originalW);
  canvas.width=Math.max(2,Math.round(originalW*scale/2)*2);canvas.height=Math.max(2,Math.round(originalH*scale/2)*2);
@@ -73,8 +74,8 @@ exportButton.addEventListener("click",async()=>{
   const ended=new Promise(resolve=>video.addEventListener("ended",resolve,{once:true}));
   await video.play();tick();
   await ended;draw();stop();await finished;
-  if(!failed){const blob=new Blob(chunks,{type:recorder.mimeType||mime});if(!blob.size)throw Error("Recording was empty.");downloadURL=URL.createObjectURL(blob);const a=document.createElement("a");a.href=downloadURL;a.download="outshark-edited."+(blob.type.includes("mp4")?"mp4":"webm");a.textContent="Download edited video";a.className="primary-button";output.replaceChildren(a);output.hidden=false;msg("Export ready · "+(blob.size/1024/1024).toFixed(2)+" MB. Check the downloaded video and audio before using.");}
- }catch(e){msg("Export failed: "+e.message+". Try a shorter video or another browser.");if(recorder?.state==="recording")recorder.stop();}
+  if(!failed){const blob=new Blob(chunks,{type:recorder.mimeType||mime});if(!blob.size)throw Error("Recording was empty.");downloadURL=URL.createObjectURL(blob);const a=document.createElement("a");a.href=downloadURL;a.download="outshark-edited."+(blob.type.includes("mp4")?"mp4":"webm");a.textContent="Download edited video";a.className="primary-button";output.replaceChildren(a);output.hidden=false;progressBar.value=100;progressLabel.textContent="100%";msg("Export ready · "+(blob.size/1024/1024).toFixed(2)+" MB. Check the downloaded video and audio before using.");}
+ }catch(e){progressWrap.hidden=true;msg("Export failed: "+e.message+". Try a shorter video or another browser.");if(recorder?.state==="recording")recorder.stop();}
  finally{cancel();stream?.getTracks().forEach(t=>t.stop());stream=null;busy=false;recorder=null;play.disabled=false;exportButton.disabled=false;}
 });
 window.addEventListener("pagehide",()=>{cancel();stream?.getTracks().forEach(t=>t.stop());if(sourceURL)URL.revokeObjectURL(sourceURL);if(downloadURL)URL.revokeObjectURL(downloadURL);audioContext?.close();});
