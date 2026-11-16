@@ -33,7 +33,8 @@ for(const file of html){
 }
 const context={window:{}};vm.runInNewContext(fs.readFileSync('assets/tools.js','utf8'),context);
 const tools=context.window.OUTSHARK_TOOLS;
-check(Array.isArray(tools)&&tools.length>0,'Tool catalogue missing');
+check(Array.isArray(tools)&&tools.length===12,'Expected 12 tool entries');
+check(tools.every(t=>t.status==="working"),"Unfinished tools must not be listed");
 const names=new Set();
 for(const tool of tools){
   check(!names.has(tool.id),'Duplicate tool id '+tool.id);names.add(tool.id);
