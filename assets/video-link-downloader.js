@@ -1,51 +1,54 @@
 (() => {
 "use strict";
-const input=document.getElementById("url"),status=document.getElementById("status"),details=document.getElementById("details"),button=document.getElementById("check");
+const input=document.getElementById("url"),status=document.getElementById("status"),details=document.getElementById("details"),button=document.getElementById("check"),cancel=document.getElementById("cancel");
+const widget=document.getElementById("progress-widget"),bar=document.getElementById("download-progress"),percent=document.getElementById("download-percent"),bytes=document.getElementById("progress-bytes");
 const socialHosts=[["youtube.com","YouTube"],["youtu.be","YouTube"],["instagram.com","Instagram"],["facebook.com","Facebook"],["fb.watch","Facebook"],["tiktok.com","TikTok"]];
-const allowedExt=/\.(mp4|webm|mov|m4v|ogv|ogg)(?:$|[?#])/i;
+const qualitySelect=document.getElementById("quality");
+const qualityKeys=["1080","720","480"];function safeURL(value){try{const u=new URL(value.trim());return ["http:","https:"].includes(u.protocol)&&!u.username&&!u.password&&allowedExt.test(u.pathname)?u:null;}catch{return null;}}
+function refreshQuality(){const previous=qualitySelect.value;for(const q of qualityKeys){const option=qualitySelect.querySelector('option[value="'+q+'"]');option.disabled=!safeURL(document.getElementById("quality-"+q).value);}if(qualitySelect.selectedOptions[0]?.disabled)qualitySelect.value="source";}
+for(const q of qualityKeys)document.getElementById("quality-"+q).addEventListener("input",refreshQuality);
+const allowedExt=/\.(mp4|webm|mov|m4v|ogv|ogg)$/i, maxBytes=200*1024*1024;
+let controller=null,objectURL=null;
 function domainIs(host,domain){return host===domain||host.endsWith("."+domain);}
 function link(href,label){const a=document.createElement("a");a.href=href;a.textContent=label;a.rel="noopener noreferrer";a.target="_blank";return a;}
-function message(text){const p=document.createElement("p");p.textContent=text;details.append(p);}
-function reset(){details.replaceChildren();details.hidden=false;status.textContent="";}
-async function saveDirect(url){
- button.disabled=true;status.textContent="Checking if this host allows direct browser download…";
- let objectURL=null;
+function message(t){const p=document.createElement("p");p.textContent=t;details.append(p);}
+function clearURL(){if(objectURL){URL.revokeObjectURL(objectURL);objectURL=null;}}
+function reset(){details.replaceChildren();details.hidden=false;status.textContent="";widget.hidden=true;bar.removeAttribute("value");percent.textContent="";bytes.textContent="";clearURL();}
+function progress(loaded,total){widget.hidden=false;if(total>0){bar.value=Math.min(100,Math.floor(loaded/total*100));percent.textContent=bar.value+"%";bytes.textContent=(loaded/1048576).toFixed(1)+" / "+(total/1048576).toFixed(1)+" MB";}else{bar.removeAttribute("value");percent.textContent="Size unknown";bytes.textContent=(loaded/1048576).toFixed(1)+" MB received";}}
+async function saveDirect(u){
+ button.disabled=true;cancel.disabled=false;controller=new AbortController();status.textContent="Connecting to source…";progress(0,0);
+ const timer=setTimeout(()=>controller?.abort("timeout"),60000);let reader=null;
  try{
-  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),25000);
-  let response;
-  try{response=await fetch(url,{mode:"cors",redirect:"follow",signal:controller.signal});}finally{clearTimeout(timeout);}
-  if(!response.ok)throw Error("The server returned HTTP "+response.status+".");
+  const response=await fetch(u.href,{mode:"cors",redirect:"follow",signal:controller.signal});
+  if(!response.ok)throw Error("The source returned HTTP "+response.status+".");
   const type=(response.headers.get("content-type")||"").toLowerCase();
-  const finalURL=response.url||url;
-  if(!type.startsWith("video/")&&!allowedExt.test(new URL(finalURL).pathname))throw Error("The link did not return a recognized video file.");
-  const declared=Number(response.headers.get("content-length")||0);
-  if(declared>200*1024*1024)throw Error("File exceeds the 200 MB browser download limit.");
-  const blob=await response.blob();
-  if(blob.size>200*1024*1024)throw Error("File exceeds the 200 MB browser download limit.");
-  if(!blob.size)throw Error("The video file is empty.");
+  const final=new URL(response.url||u.href);
+  if(!type.startsWith("video/")&&!allowedExt.test(final.pathname))throw Error("Source did not return a recognized video.");
+  const total=Number(response.headers.get("content-length")||0);if(total>maxBytes)throw Error("Video exceeds the 200 MB limit.");
+  if(!response.body?.getReader)throw Error("This browser cannot stream the download. Use the source site's download option.");
+  reader=response.body.getReader();let received=0,chunks=[];
+  while(true){const {done,value}=await reader.read();if(done)break;received+=value.byteLength;if(received>maxBytes)throw Error("File exceeds the 200 MB limit.");chunks.push(value);progress(received,total);}
+  if(!received)throw Error("Source returned an empty file.");
+  const blob=new Blob(chunks,{type:type.startsWith("video/")?type:"application/octet-stream"});
   objectURL=URL.createObjectURL(blob);
-  const raw=new URL(finalURL).pathname.split("/").pop()||"video.mp4";
-  const name=decodeURIComponent(raw).replace(/[^a-zA-Z0-9._-]/g,"_").slice(0,90)||"video.mp4";
-  const a=document.createElement("a");a.href=objectURL;a.download=name;a.textContent="Download "+name;a.className="primary-button";
-  details.append(a);status.textContent="Video ready · "+(blob.size/1024/1024).toFixed(2)+" MB. Available resolution is whatever the original file contains.";
-  const assigned=objectURL;setTimeout(()=>URL.revokeObjectURL(assigned),120000);
- }catch(err){if(objectURL)URL.revokeObjectURL(objectURL);status.textContent="Direct download unavailable: "+err.message+" Use the host's official download option instead.";}
- finally{button.disabled=false;}
+  const raw=final.pathname.split("/").pop()||"outshark-video.mp4";let name;
+  try{name=decodeURIComponent(raw).replace(/[^a-zA-Z0-9._-]/g,"_").slice(0,90);}catch{name="outshark-video.mp4";}
+  const a=document.createElement("a");a.href=objectURL;a.download=name||"outshark-video.mp4";a.className="primary-button";a.textContent="Save "+a.download;details.append(a);
+  progress(received,received);status.textContent="100% — download prepared. Source quality preserved; no upscaling or re-encoding.";
+ }catch(e){if(e.name==="AbortError"||controller?.signal.aborted){status.textContent="Download canceled or timed out.";}else status.textContent="Direct download unavailable: "+e.message;widget.hidden=true;}
+ finally{clearTimeout(timer);try{await reader?.cancel();}catch{}controller=null;button.disabled=false;cancel.disabled=true;}
 }
+cancel.addEventListener("click",()=>controller?.abort());
 button.addEventListener("click",async()=>{
- reset();const raw=input.value.trim();let u;
- try{u=new URL(raw);if(!["http:","https:"].includes(u.protocol)||!u.hostname)throw Error();if(u.username||u.password)throw Error();}
- catch{status.textContent="Enter a complete http:// or https:// URL without embedded credentials.";details.hidden=true;return;}
+ if(controller)return;reset();let u;const selected=qualitySelect.value;
+ try{u=new URL((selected==="source"?input.value:document.getElementById("quality-"+selected).value).trim());if(!["http:","https:"].includes(u.protocol)||!u.hostname||u.username||u.password)throw Error();}catch{status.textContent="Enter a complete HTTP or HTTPS URL without credentials.";details.hidden=true;return;}
  const social=socialHosts.find(([host])=>domainIs(u.hostname.toLowerCase(),host));
- if(social){status.textContent=social[1]+" page link detected.";
- message(social[1]+" links are not direct media files. Outshark cannot fetch or guarantee full-HD downloads from this service.");
- if(social[1]==="YouTube"){details.append(link("https://studio.youtube.com/","Open YouTube Studio to download your uploads"));}
- else details.append(link(u.href,"Open the original post for the platform's available download options"));
- return;}
- if(!allowedExt.test(u.pathname)){status.textContent="This appears to be a web page, not a direct video file.";message("You can open the original page and use its permitted download or export feature.");details.append(link(u.href,"Open original page"));return;}
- message("Checking a direct video file URL. The source must allow cross-origin downloads.");
- details.append(link(u.href,"Open video in original host"));
- await saveDirect(u.href);
+ if(social){status.textContent=social[1]+" page link detected.";message("This is a social-platform page, not a direct video file. No video quality or file progress can be detected without an authorized download URL.");
+ details.append(social[1]==="YouTube"?link("https://studio.youtube.com/","Download your own uploads in YouTube Studio"):link(u.href,"Open post for available official download options"));return;}
+ if(!allowedExt.test(u.pathname)){status.textContent="This appears to be a webpage, not a direct video file.";message("Choose a permitted direct video file URL to download.");details.append(link(u.href,"Open the original page"));return;}
+ message("Direct video detected. Downloading only where source permissions allow it.");details.append(link(u.href,"Open original video"));
+ await saveDirect(u);
 });
-document.getElementById("year").textContent=new Date().getFullYear();
+window.addEventListener("pagehide",()=>{controller?.abort();clearURL();});
+document.getElementById("year").textContent=String(new Date().getFullYear());
 })();

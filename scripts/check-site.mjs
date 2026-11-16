@@ -33,12 +33,17 @@ for(const file of html){
 }
 const context={window:{}};vm.runInNewContext(fs.readFileSync('assets/tools.js','utf8'),context);
 const tools=context.window.OUTSHARK_TOOLS;
-check(Array.isArray(tools)&&tools.length===14,'Expected 12 tool entries');
+check(Array.isArray(tools)&&tools.length===14,'Expected 14 tool entries');
 check(tools.every(t=>t.status==="working"),"Unfinished tools must not be listed");
 const names=new Set();
 for(const tool of tools){
   check(!names.has(tool.id),'Duplicate tool id '+tool.id);names.add(tool.id);
   if(tool.status==='working')check(fs.existsSync(path.resolve(root,tool.href)),'Working tool missing '+tool.href);
+}
+const toolHtml=html.filter(file=>file.includes(path.sep+'tools'+path.sep));
+for(const file of toolHtml){
+ const source=fs.readFileSync(file,'utf8');
+ check(source.includes('tool-progress.js')||source.includes('id="progress-widget"')||source.includes('id="export-progress-wrap"'),'Tool lacks progress UI: '+file);
 }
 const cname=fs.readFileSync('CNAME','utf8').trim();
 check(cname==='www.outshark.in','CNAME does not match preferred domain');

@@ -37,3 +37,10 @@
 .tool-panel [role="status"]{overflow-wrap:anywhere}
 .tool-panel a.primary-button{display:inline-block;text-decoration:none}
 @media(max-width:600px){.tool-panel button + button{margin-left:0;margin-top:8px}.video-editor-preview canvas{max-height:45vh}}
+
+/* Progress UI: determinate only when a measurable percentage exists */
+.progress-widget{margin:16px 0;padding:14px;background:#edf6fc;border:1px solid #cfe4f5;border-radius:12px}
+.progress-widget label{display:flex;gap:8px;justify-content:space-between;font-size:13px;font-weight:700;color:#174568}
+.progress-widget progress{display:block;width:100%;height:13px;margin:10px 0;accent-color:#118acf;border:0;border-radius:10px}
+.progress-widget p{margin:6px 0 0;font-size:12px;color:#4a6479}
+.progress-widget output{font-variant-numeric:tabular-nums}

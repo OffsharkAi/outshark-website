@@ -9,4 +9,4 @@ w.addEventListener("input",()=>{if(lock.checked&&Number(w.value)>0)h.value=Math.
 h.addEventListener("input",()=>{if(lock.checked&&Number(h.value)>0)w.value=Math.max(1,Math.round(Number(h.value)*sourceWidth/sourceHeight));});
 action.addEventListener("click",async()=>{try{const f=prepare();const width=Number(w.value),height=Number(h.value);if(!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width>10000||height>10000)throw Error("Enter valid dimensions between 1 and 10000.");const img=await load(f),canvas=canvasFor(width,height);canvas.getContext("2d").drawImage(img,0,0,width,height);save(canvas,"image/png","outshark-resized.png");}catch(e){message(e.message);}});
 
-document.getElementById("year").textContent=new Date().getFullYear();</script></body></html>
+document.getElementById("year").textContent=new Date().getFullYear();</script><script src="../assets/tool-progress.js" defer></script></body></html>

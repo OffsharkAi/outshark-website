@@ -4,4 +4,4 @@ function run(){const x=Number(a.value),y=Number(b.value);if(!a.value.trim()||!b.
 if(mode.value!=="percent"&&(mode.value==="share"?y===0:x===0)){answer.textContent="";status.textContent="Cannot divide by zero.";return;}
 const result=mode.value==="percent"?x*y/100:mode.value==="share"?x/y*100:(y-x)/x*100;if(!Number.isFinite(result)){answer.textContent="";status.textContent="Result is too large.";return;}answer.textContent=new Intl.NumberFormat("en",{maximumSignificantDigits:12}).format(result)+(mode.value==="percent"?"":"%");status.textContent="Calculation complete.";}
 document.getElementById("run").addEventListener("click",run);[a,b,mode].forEach(el=>el.addEventListener("input",run));run();
-document.getElementById("year").textContent=new Date().getFullYear();</script></body></html>
+document.getElementById("year").textContent=new Date().getFullYear();</script><script src="../assets/tool-progress.js" defer></script></body></html>

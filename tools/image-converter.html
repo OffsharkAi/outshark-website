@@ -6,4 +6,4 @@
 const quality=document.getElementById("quality");quality.addEventListener("input",()=>document.getElementById("quality-label").textContent=quality.value+"%");
 action.addEventListener("click",async()=>{try{const f=prepare(),img=await load(f),canvas=canvasFor(img.naturalWidth,img.naturalHeight),ctx=canvas.getContext("2d"),type=document.getElementById("format").value;if(type==="image/jpeg"){ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);}ctx.drawImage(img,0,0);save(canvas,type,"outshark-converted."+(type==="image/jpeg"?"jpg":type==="image/png"?"png":"webp"),Number(quality.value)/100);}catch(e){message(e.message);}});
 
-document.getElementById("year").textContent=new Date().getFullYear();</script></body></html>
+document.getElementById("year").textContent=new Date().getFullYear();</script><script src="../assets/tool-progress.js" defer></script></body></html>
