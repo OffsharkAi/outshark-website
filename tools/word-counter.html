@@ -8,4 +8,4 @@
 const input=document.getElementById('text-input');
 function update(){const t=input.value.trim(), words=t?t.split(/\s+/u).length:0, sentences=t?(t.match(/[.!?]+(?=\s|$)/g)||[]).length:0;document.getElementById('words').textContent=words;document.getElementById('chars').textContent=input.value.length;document.getElementById('sentences').textContent=sentences;document.getElementById('reading').textContent=Math.max(1,Math.ceil(words/200))+' min';if(!words)document.getElementById('reading').textContent='0 min';}
 input.addEventListener('input',update);document.getElementById('clear').addEventListener('click',()=>{input.value='';update();});document.querySelector('.year').textContent=new Date().getFullYear();
-</script></body></html>
+</script><script src="../assets/tool-progress.js" defer></script></body></html>
