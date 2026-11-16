@@ -6,4 +6,4 @@
 fileEl.addEventListener("change",async()=>{try{const f=prepare(),img=await load(f);document.getElementById("width").value=img.naturalWidth;document.getElementById("height").value=img.naturalHeight;message("Image size: "+img.naturalWidth+" × "+img.naturalHeight+" pixels.");}catch(e){message(e.message);}});
 action.addEventListener("click",async()=>{try{const f=prepare(),img=await load(f);const values=["x","y","width","height"].map(id=>Number(document.getElementById(id).value));const [x,y,w,h]=values;if(values.some(v=>!Number.isInteger(v))||x<0||y<0||w<1||h<1||x+w>img.naturalWidth||y+h>img.naturalHeight)throw Error("Crop rectangle must fit inside the image.");const canvas=canvasFor(w,h);canvas.getContext("2d").drawImage(img,x,y,w,h,0,0,w,h);save(canvas,"image/png","outshark-cropped.png");}catch(e){message(e.message);}});
 
-document.getElementById("year").textContent=new Date().getFullYear();</script></body></html>
+document.getElementById("year").textContent=new Date().getFullYear();</script><script src="../assets/tool-progress.js" defer></script></body></html>
