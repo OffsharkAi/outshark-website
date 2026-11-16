@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://outshark.in/sitemap.xml
