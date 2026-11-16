@@ -3,4 +3,4 @@ const input=document.getElementById("input"),result=document.getElementById("res
 function run(pretty){try{const value=JSON.parse(input.value);result.value=JSON.stringify(value,null,pretty?2:0);status.textContent="Valid JSON."; }catch(e){result.value="";status.textContent="Invalid JSON: "+e.message;}}
 document.getElementById("format").addEventListener("click",()=>run(true));document.getElementById("minify").addEventListener("click",()=>run(false));
 document.getElementById("copy").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(result.value);status.textContent="Copied.";}catch{result.focus();result.select();status.textContent="Select and copy manually.";}});
-document.getElementById("year").textContent=new Date().getFullYear();</script></body></html>
+document.getElementById("year").textContent=new Date().getFullYear();</script><script src="../assets/tool-progress.js" defer></script></body></html>
