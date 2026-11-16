@@ -3,6 +3,10 @@
 const input=document.getElementById("url"),status=document.getElementById("status"),details=document.getElementById("details"),button=document.getElementById("check"),cancel=document.getElementById("cancel");
 const widget=document.getElementById("progress-widget"),bar=document.getElementById("download-progress"),percent=document.getElementById("download-percent"),bytes=document.getElementById("progress-bytes");
 const socialHosts=[["youtube.com","YouTube"],["youtu.be","YouTube"],["instagram.com","Instagram"],["facebook.com","Facebook"],["fb.watch","Facebook"],["tiktok.com","TikTok"]];
+const qualitySelect=document.getElementById("quality");
+const qualityKeys=["1080","720","480"];function safeURL(value){try{const u=new URL(value.trim());return ["http:","https:"].includes(u.protocol)&&!u.username&&!u.password&&allowedExt.test(u.pathname)?u:null;}catch{return null;}}
+function refreshQuality(){const previous=qualitySelect.value;for(const q of qualityKeys){const option=qualitySelect.querySelector('option[value="'+q+'"]');option.disabled=!safeURL(document.getElementById("quality-"+q).value);}if(qualitySelect.selectedOptions[0]?.disabled)qualitySelect.value="source";}
+for(const q of qualityKeys)document.getElementById("quality-"+q).addEventListener("input",refreshQuality);
 const allowedExt=/\.(mp4|webm|mov|m4v|ogv|ogg)$/i, maxBytes=200*1024*1024;
 let controller=null,objectURL=null;
 function domainIs(host,domain){return host===domain||host.endsWith("."+domain);}
@@ -36,8 +40,8 @@ async function saveDirect(u){
 }
 cancel.addEventListener("click",()=>controller?.abort());
 button.addEventListener("click",async()=>{
- if(controller)return;reset();let u;
- try{u=new URL(input.value.trim());if(!["http:","https:"].includes(u.protocol)||!u.hostname||u.username||u.password)throw Error();}catch{status.textContent="Enter a complete HTTP or HTTPS URL without credentials.";details.hidden=true;return;}
+ if(controller)return;reset();let u;const selected=qualitySelect.value;
+ try{u=new URL((selected==="source"?input.value:document.getElementById("quality-"+selected).value).trim());if(!["http:","https:"].includes(u.protocol)||!u.hostname||u.username||u.password)throw Error();}catch{status.textContent="Enter a complete HTTP or HTTPS URL without credentials.";details.hidden=true;return;}
  const social=socialHosts.find(([host])=>domainIs(u.hostname.toLowerCase(),host));
  if(social){status.textContent=social[1]+" page link detected.";message("This is a social-platform page, not a direct video file. No video quality or file progress can be detected without an authorized download URL.");
  details.append(social[1]==="YouTube"?link("https://studio.youtube.com/","Download your own uploads in YouTube Studio"):link(u.href,"Open post for available official download options"));return;}
