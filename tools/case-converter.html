@@ -3,4 +3,4 @@ const input=document.getElementById("input"),result=document.getElementById("res
 document.getElementById("run").addEventListener("click",()=>{const mode=document.getElementById("mode").value,text=input.value;
 result.value=mode==="upper"?text.toUpperCase():mode==="lower"?text.toLowerCase():mode==="title"?text.toLowerCase().replace(/(^|[^\p{L}\p{N}])([\p{L}])/gu,(_,a,b)=>a+b.toUpperCase()):text.toLowerCase().replace(/(^|[.!?]\s+)(\p{L})/gu,(_,a,b)=>a+b.toUpperCase());status.textContent="Converted "+result.value.length+" characters.";});
 document.getElementById("copy").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(result.value);status.textContent="Copied.";}catch{result.focus();result.select();status.textContent="Select the result and copy it manually.";}});
-document.getElementById("year").textContent=new Date().getFullYear();</script></body></html>
+document.getElementById("year").textContent=new Date().getFullYear();</script><script src="../assets/tool-progress.js" defer></script></body></html>
