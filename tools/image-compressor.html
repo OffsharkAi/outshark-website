@@ -6,7 +6,8 @@
 <p class="notice">Note: PNG files may become larger when converted to JPEG/WebP. Transparency is not preserved when converting to JPEG. Check the output before using it.</p><p><a href="../index.html">← Back to all tools</a></p></main>
 <footer class="site-footer"><a class="brand footer-brand" href="../index.html"><span class="brand-mark">O</span><span>OUTSHARK</span></a><small>© <span class="year"></span> Outshark</small></footer>
 <script>
-const fileInput=document.getElementById('image-file'), quality=document.getElementById('quality'), result=document.getElementById('result');\nlet previousUrl=null; function cleanup(){if(previousUrl){URL.revokeObjectURL(previousUrl);previousUrl=null;}}
+const fileInput=document.getElementById('image-file'), quality=document.getElementById('quality'), result=document.getElementById('result');
+let previousUrl=null; function cleanup(){if(previousUrl){URL.revokeObjectURL(previousUrl);previousUrl=null;}}
 quality.addEventListener('input',()=>document.getElementById('quality-value').textContent=quality.value+'%');
 document.getElementById('compress').addEventListener('click',()=>{
  cleanup(); const file=fileInput.files[0]; if(!file){result.hidden=false;result.textContent='Choose an image first.';return;}
