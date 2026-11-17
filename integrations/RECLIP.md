@@ -30,6 +30,8 @@ cd reclip
 
 The upstream default binds to localhost on port 8899. That is separate from the public Outshark site.
 
+**Oracle deployment/security review:** [ORACLE-DEPLOYMENT.md](ORACLE-DEPLOYMENT.md). This is a fail-closed gate: the live VM remains private, and the preview must not be enabled just because it returns HTTP 200.
+
 ## Production integration gate
 
 Before publishing any backend:
