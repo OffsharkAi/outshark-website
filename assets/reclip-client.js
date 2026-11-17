@@ -21,7 +21,7 @@ const configured=(()=>{
     location.hostname==="www.outshark.in";
  }catch{return false;}
 })();
-if(!configured){setup.textContent="ReClip backend is not configured. This preview cannot download videos until a secured same-origin HTTPS backend is deployed.";return;}
+if(!configured){setup.textContent="ReClip backend is not configured. This preview remains disabled until the dedicated HTTPS API and security checks are approved.";return;}
 setup.textContent="Backend configured. Only request content you are authorized to download.";
 fetchButton.disabled=false;
 async function requestJSON(endpoint,payload){
