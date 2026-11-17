@@ -8,8 +8,18 @@ const year=document.getElementById("year");year.textContent=new Date().getFullYe
 let title="",jobId="",busy=false;
 function info(t){status.textContent=t;}
 function showResult(){result.hidden=false;result.replaceChildren();}
+// Require an explicit production feature flag. A DNS record or HTTPS endpoint alone
+// must never make the downloader publicly usable.
 const configured=(()=>{
- try{const url=new URL(base,location.href);return !!base&&url.protocol==="https:"&&url.origin===location.origin;}catch{return false;}
+ if(window.OUTSHARK_RECLIP_ENABLED!==true)return false;
+ try {
+  const url=new URL(base);
+  // Only the explicitly authorized API hostname is allowed for cross-origin requests.
+  return url.protocol==="https:"&&url.username===""&&url.password===""&&
+    url.hostname==="api.outshark.in"&&url.port===""&&url.pathname===""&&
+    url.search===""&&url.hash===""&&location.protocol==="https:"&&
+    location.hostname==="www.outshark.in";
+ }catch{return false;}
 })();
 if(!configured){setup.textContent="ReClip backend is not configured. This preview cannot download videos until a secured same-origin HTTPS backend is deployed.";return;}
 setup.textContent="Backend configured. Only request content you are authorized to download.";
@@ -17,7 +27,7 @@ fetchButton.disabled=false;
 async function requestJSON(endpoint,payload){
  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),65000);
  try{
-  const res=await fetch(base+endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload),credentials:"same-origin",signal:controller.signal});
+  const res=await fetch(base+endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload),credentials:"omit",signal:controller.signal});
   const data=await res.json().catch(()=>({error:"Invalid response from video service."}));
   if(!res.ok||data.error)throw Error(String(data.error||"Backend returned HTTP "+res.status).slice(0,300));
   return data;
@@ -27,7 +37,7 @@ function validURL(value){try{const u=new URL(value);return ["http:","https:"].in
 async function poll(id){
  for(let attempt=0;attempt<180;attempt++){
   await new Promise(r=>setTimeout(r,1500));
-  const res=await fetch(base+"/api/status/"+encodeURIComponent(id),{credentials:"same-origin",cache:"no-store"});
+  const res=await fetch(base+"/api/status/"+encodeURIComponent(id),{credentials:"omit",cache:"no-store"});
   const data=await res.json().catch(()=>({error:"Invalid status response"}));
   if(!res.ok||data.error)throw Error(String(data.error||"Unable to check download status").slice(0,250));
   if(data.status==="done"){
