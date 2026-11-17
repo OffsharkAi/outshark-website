@@ -2,6 +2,15 @@
 
 Status: **NOT APPROVED FOR PUBLIC TRAFFIC**. These instructions describe a deployment review; they are not evidence that the server has passed it.
 
+## Cloudflare staging completed (2026-11-17)
+
+- Cloudflare reports `outshark.in` zone active, account on Free Website plan.
+- Connected remotely managed tunnel `outshark-oracle-reclip` is healthy (4 connections).
+- Created proxied `api.outshark.in` CNAME to tunnel `42181045-e2f9-4f3e-a3e7-09ae970d8ceb.cfargotunnel.com`.
+- Verified tunnel ingress is **only** `http_status:404`. Do not change this until every production blocker passes.
+- Created read-only audit script `integrations/oracle-security-audit.sh` for the server operator. Run with a local shell, review blockers before enabling anything.
+- Cloudflare DNS and tunnel configuration verified via API. HTTPS availability from an independent external client has **not** yet been confirmed (initial external DNS lookup failed).
+
 ## Current architecture (as observed 2026-11-17)
 
 - Public static website: GitHub Pages, canonical URL `https://www.outshark.in/`.
