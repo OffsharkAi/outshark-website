@@ -1,4 +1,6 @@
-// ReClip API proxy base. Leave empty until a secured HTTPS backend is deployed.
-// A real deployment should proxy /reclip-api on a managed HTTPS host to Flask.
-// GitHub Pages alone cannot supply this proxy or execute the backend.
+// Production deployment gate — intentionally OFF.
+// Never enable until api.outshark.in is HTTPS, authenticated/abuse-limited,
+// sandboxed against SSRF, and has a verified aggregate disk quota.
+// The public GitHub Pages website cannot proxy Python requests.
+window.OUTSHARK_RECLIP_ENABLED = false;
 window.OUTSHARK_RECLIP_API_BASE = "";
