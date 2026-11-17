@@ -11,6 +11,15 @@ Status: **NOT APPROVED FOR PUBLIC TRAFFIC**. These instructions describe a deplo
 - Created read-only audit script `integrations/oracle-security-audit.sh` for the server operator. Run with a local shell, review blockers before enabling anything.
 - Cloudflare DNS and tunnel configuration verified via API. HTTPS availability from an independent external client has **not** yet been confirmed (initial external DNS lookup failed).
 
+## Additional Cloudflare launch lock (2026-11-17)
+
+- Added zone-scoped custom WAF ruleset `Outshark API launch safety lock` (ruleset `402ced8a96e5467cbdceba46d26c11fe`) in phase `http_request_firewall_custom`.
+- The rule `(http.host eq "api.outshark.in")` with action `block` is enabled. It targets the API hostname only, not `www.outshark.in`.
+- The tunnel also retains its catch-all `http_status:404` origin. **These are two independent fail-closed barriers.** Keep both in place while the backend is not verified.
+- Public API requests will be blocked even if the tunnel connector is healthy. The WAF rule must eventually be explicitly revised/removed to permit approved traffic.
+- **Important product restriction:** Cloudflare Free/Pro/Business public Tunnel routes are subject to Cloudflare's video/large-file delivery terms. A free public Tunnel cannot be assumed suitable for delivering downloaded MP4/MP3 files. Design a compliant data-delivery route (e.g. DNS-only HTTPS on Oracle with proper origin firewall and abuse controls, or a paid Cloudflare product); never route large media through the free public tunnel and assume compliance.
+- WAF is not a substitute for SSRF-proof downloader network isolation, hard aggregate disk quota, reliable rate limiting, file access control, and legal/content policies.
+
 ## Current architecture (as observed 2026-11-17)
 
 - Public static website: GitHub Pages, canonical URL `https://www.outshark.in/`.
