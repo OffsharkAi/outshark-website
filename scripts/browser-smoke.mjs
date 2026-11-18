@@ -15,6 +15,28 @@ try{
       await page.waitForTimeout(600);
       const headline=await page.locator('h1').first().textContent();
       if(!headline?.trim())throw Error('Missing visible heading');
+      if(route==='/tools/image-compressor.html'){
+        const pngBase64=await page.evaluate(()=>{
+          const canvas=document.createElement('canvas');canvas.width=12;canvas.height=12;
+          canvas.getContext('2d').fillRect(0,0,12,12);
+          return canvas.toDataURL('image/png').split(',')[1];
+        });
+        await page.locator('#image-file').setInputFiles({name:'test.png',mimeType:'image/png',buffer:Buffer.from(pngBase64,'base64')});
+        await page.evaluate(()=>{
+          const original=HTMLCanvasElement.prototype.toBlob;
+          HTMLCanvasElement.prototype.toBlob=function(callback,type,quality){
+            // Simulate an iPhone/browser that silently substitutes PNG for WebP.
+            return original.call(this,callback,type==='image/webp'?'image/png':type,quality);
+          };
+        });
+        await page.locator('#compress').click();
+        await page.locator('#result a[download$=".png"]').waitFor({timeout:10000});
+        if(!(await page.locator('#result').innerText()).includes('WebP encoding is unavailable'))throw Error('WebP fallback not explained');
+        await page.locator('#output-format').selectOption('image/jpeg');
+        await page.locator('#compress').click();
+        await page.locator('#result a[download$=".jpg"]').waitFor({timeout:10000});
+        console.log('PASS image compressor real encode + simulated WebP fallback');
+      }
       if(jsErrors.length)throw Error('JavaScript exception: '+jsErrors.join('; '));
       console.log('PASS',route,headline.trim().replace(/\\s+/g,' ').slice(0,90));
     }catch(e){const error=route+': '+String(e.message||e);console.error('FAIL',error);errors.push(error);}
