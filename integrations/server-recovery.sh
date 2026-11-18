@@ -12,12 +12,15 @@ ACTION="${1:-status}"
 die(){ printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 active(){ systemctl is-active --quiet "$SERVICE"; }
 health(){
-  # ReClip has no /health endpoint. Its root can return 400 under the server URL guard,
-  # so probe a known nonexistent job: HTTP 404 with the expected JSON error body.
-  local response
-  response="$(curl --silent --show-error --max-time 8 --write-out '\
-%{http_code}' \"${LOCAL_URL}api/status/0000000000\" 2>/dev/null)" || return 1
-  [[ "${response##*
+  # The root handler can return 400 from URL validation.
+  # A missing job should return JSON with "Job not found" and HTTP 404.
+  local response status body
+  response="$(curl --silent --show-error --max-time 8 --write-out 'HTTP_CODE:%{http_code}' "${LOCAL_URL}api/status/0000000000" 2>/dev/null)" || return 1
+  status="${response##*HTTP_CODE:}"
+  body="${response%HTTP_CODE:*}"
+  [[ "$status" == "404" ]] && [[ "$body" == *'Job not found'* ]]
+}
+
 check_config(){
   [[ "$SERVICE" == "outshark-reclip.service" ]] || die "Unexpected service name"
   [[ "$LOCAL_URL" == "http://127.0.0.1:8899/" ]] || die "Unexpected health URL"
