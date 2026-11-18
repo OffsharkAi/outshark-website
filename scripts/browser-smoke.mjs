@@ -52,6 +52,9 @@ async function testTool(page,route){
     assert((await page.locator('#feedback').innerText()).includes('WebP unavailable'),'Converter fallback missing');
   }else if(route==='/tools/image-cropper.html'){
     await image(page);
+    await page.locator('#feedback').getByText('Image size:',{exact:false}).waitFor({timeout:10000});
+    await page.locator('#width').fill('10');
+    await page.locator('#height').fill('10');
     await page.locator('#action').click();
     await page.locator('#output a[download$=".png"]').waitFor({timeout:12000});
   }else if(route==='/tools/word-counter.html'){
