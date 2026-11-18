@@ -2,37 +2,68 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Compress JPEG, PNG and WebP images in your browser."><link rel="canonical" href="https://www.outshark.in/tools/image-compressor.html"><title>Image Compressor — Outshark</title><link rel="stylesheet" href="../assets/styles.css"><link rel="icon" type="image/svg+xml" href="../assets/outshark-icon.svg"></head>
 <body><header class="site-header"><a class="brand" href="../index.html" aria-label="Outshark home"><img class="brand-logo" src="../assets/outshark-brand.webp" alt="Outshark" width="210" height="115" decoding="async"></a><nav><a href="../index.html#tools">All tools</a><a href="../request-tool.html">Request a tool</a></nav></header>
 <main class="content-page"><div class="eyebrow dark">IMAGE TOOL</div><h1>Image Compressor</h1><p>Reduce the file size of a JPEG, PNG or WebP image locally in your browser. Your selected image is not uploaded to Outshark.</p>
-<div class="tool-panel"><div class="field"><label for="image-file">Choose an image</label><input id="image-file" type="file" accept="image/jpeg,image/png,image/webp"></div><div class="field"><label for="quality">Output quality (WebP)</label><input id="quality" type="range" min="30" max="95" value="75"><span id="quality-value">75%</span></div><button class="primary-button" id="compress" type="button">Compress image</button><div id="result" class="output" hidden aria-live="polite"></div></div>
+<div class="tool-panel"><div class="field"><label for="image-file">Choose an image</label><input id="image-file" type="file" accept="image/jpeg,image/png,image/webp"></div><div class="field"><label for="output-format">Output format</label><select id="output-format"><option value="auto">Automatic (WebP if supported)</option><option value="image/jpeg">JPEG (smaller, no transparency)</option><option value="image/png">PNG (preserves transparency)</option></select></div><div class="field"><label for="quality">Output quality (WebP or JPEG)</label><input id="quality" type="range" min="30" max="95" value="75"><span id="quality-value">75%</span></div><button class="primary-button" id="compress" type="button">Compress image</button><div id="result" class="output" hidden aria-live="polite"></div></div>
 <p class="notice">Note: PNG files may become larger when converted to JPEG/WebP. Transparency is not preserved when converting to JPEG. Check the output before using it.</p><p><a href="../index.html">← Back to all tools</a></p></main>
 <footer class="site-footer"><a class="brand footer-brand" href="../index.html" aria-label="Outshark home"><img class="brand-logo" src="../assets/outshark-brand.webp" alt="Outshark" width="210" height="115" decoding="async"></a><small>© <span class="year"></span> Outshark</small></footer>
 <script>
-const fileInput=document.getElementById('image-file'), quality=document.getElementById('quality'), result=document.getElementById('result');
-let previousUrl=null; function cleanup(){if(previousUrl){URL.revokeObjectURL(previousUrl);previousUrl=null;}}
+const fileInput=document.getElementById('image-file');
+const quality=document.getElementById('quality');
+const format=document.getElementById('output-format');
+const result=document.getElementById('result');
+const button=document.getElementById('compress');
+let previousUrl=null;
+function cleanup(){if(previousUrl){URL.revokeObjectURL(previousUrl);previousUrl=null;}}
+function message(text){result.replaceChildren();result.textContent=text;result.hidden=false;}
+function kb(n){return (n/1024).toFixed(1)+' KB';}
+function encode(canvas,type,q){
+ return new Promise((resolve,reject)=>{
+  if(!canvas.toBlob){reject(new Error('Your browser cannot export canvas images.'));return;}
+  try{canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Image export failed.')) ,type,q);}
+  catch(e){reject(e);}
+ });
+}
 quality.addEventListener('input',()=>document.getElementById('quality-value').textContent=quality.value+'%');
-document.getElementById('compress').addEventListener('click',()=>{
- cleanup(); const file=fileInput.files[0]; if(!file){result.hidden=false;result.textContent='Choose an image first.';return;}
- if(!['image/jpeg','image/png','image/webp'].includes(file.type)){result.hidden=false;result.textContent='Please choose a JPEG, PNG or WebP image.';return;}
- if(file.size>20*1024*1024){result.hidden=false;result.textContent='Choose an image under 20 MB.';return;}
- const reader=new FileReader();
- reader.onerror=()=>{result.hidden=false;result.textContent='Could not read this file.';};
- reader.onload=()=>{
+button.addEventListener('click',async()=>{
+ cleanup();
+ const file=fileInput.files?.[0];
+ if(!file){message('Choose an image first.');return;}
+ if(!['image/jpeg','image/png','image/webp'].includes(file.type)){message('Choose a JPEG, PNG or WebP image.');return;}
+ if(file.size>20*1024*1024){message('Choose an image under 20 MB.');return;}
+ button.disabled=true;message('Compressing locally in your browser…');
+ const src=URL.createObjectURL(file);
+ try{
   const img=new Image();
-  img.onerror=()=>{result.hidden=false;result.textContent='This image could not be decoded.';};
-  img.onload=()=>{
-   const canvas=document.createElement('canvas');canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
-   const ctx=canvas.getContext('2d');if(!ctx){result.hidden=false;result.textContent='Canvas is unavailable.';return;}ctx.drawImage(img,0,0);
-   const type='image/webp';
-   canvas.toBlob(blob=>{
-    if(!blob){result.hidden=false;result.textContent='Compression failed. Try another image.';return;}
-    if(blob.type!=='image/webp'){result.hidden=false;result.textContent='Your browser does not support WebP encoding.';return;}
-    const url=URL.createObjectURL(blob);previousUrl=url; const a=document.createElement('a');a.href=url;a.download='outshark-compressed.'+(blob.type==='image/webp'?'webp':'png');a.textContent='Download compressed image';
-    result.hidden=false;result.innerHTML='';
-    const info=document.createElement('p');info.textContent=`Original: ${(file.size/1024).toFixed(1)} KB · New: ${(blob.size/1024).toFixed(1)} KB`;
-    const note=document.createElement('p');note.textContent=blob.size<file.size?'File size reduced.':'The result is not smaller at this quality setting.';
-    result.append(info,note,a);
-   },type,Number(quality.value)/100);
-  };img.src=reader.result;
- };reader.readAsDataURL(file);
+  await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error('This image could not be decoded.'));img.src=src;});
+  const width=img.naturalWidth,height=img.naturalHeight;
+  if(!width||!height||width*height>40000000)throw new Error('Image dimensions are too large for safe browser processing.');
+  const canvas=document.createElement('canvas');
+  canvas.width=width;canvas.height=height;
+  const ctx=canvas.getContext('2d');
+  if(!ctx)throw new Error('Canvas is unavailable.');
+  // JPEG cannot preserve transparency; white background avoids black transparent pixels.
+  const requested=format.value;
+  const q=Number(quality.value)/100;
+  const candidates=requested==='auto'?['image/webp',file.type==='image/jpeg'?'image/jpeg':'image/png']:[requested];
+  let blob=null,outputType='',fallback=false;
+  for(let i=0;i<candidates.length;i++){
+   const type=candidates[i];
+   ctx.clearRect(0,0,width,height);
+   if(type==='image/jpeg'){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,width,height);}
+   ctx.drawImage(img,0,0);
+   const encoded=await encode(canvas,type,q);
+   // Browsers may silently encode PNG when WebP is requested.
+   if(encoded.type!==type)continue;
+   blob=encoded;outputType=type;fallback=i>0;break;
+  }
+  if(!blob)throw new Error('The selected image format is not supported in this browser. Try JPEG or PNG.');
+  const ext=outputType==='image/webp'?'webp':outputType==='image/jpeg'?'jpg':'png';
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);previousUrl=a.href;
+  a.download='outshark-compressed.'+ext;a.textContent='Download '+ext.toUpperCase()+' image';a.className='primary-button';
+  const info=document.createElement('p');info.textContent='Original: '+kb(file.size)+' · New: '+kb(blob.size)+' · Format: '+ext.toUpperCase();
+  const note=document.createElement('p');note.textContent=(fallback?'WebP encoding is unavailable here, so '+ext.toUpperCase()+' was used. ':'')+(blob.size<file.size?'File size reduced.':'The file is not smaller; try JPEG or lower quality. PNG export does not use the quality slider.');
+  result.replaceChildren(info,note,a);result.hidden=false;
+ }catch(e){message('Compression failed: '+(e?.message||'Unexpected error.'));}
+ finally{URL.revokeObjectURL(src);button.disabled=false;}
 });
 document.querySelector('.year').textContent=new Date().getFullYear();
 </script><script src="../assets/tool-progress.js" defer></script></body></html>
