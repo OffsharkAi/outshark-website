@@ -47,11 +47,11 @@ for(const file of toolHtml){
 }
 // Public ReClip must stay fail-closed until a separately approved server rollout.
 const reclipConfig=fs.readFileSync('assets/reclip-config.js','utf8');
-check(/window\\.OUTSHARK_RECLIP_ENABLED\\s*=\\s*false\\s*;/.test(reclipConfig),
+check(reclipConfig.includes('window.OUTSHARK_RECLIP_ENABLED = false;'),
   'ReClip enabled without separately verified server rollout');
-check(/window\\.OUTSHARK_RECLIP_API_BASE\\s*=\\s*["']\\s*["']\\s*;/.test(reclipConfig),
+check(reclipConfig.includes('window.OUTSHARK_RECLIP_API_BASE = ""; '.trim()),
   'ReClip API configured without separately verified server rollout');
-check(!tools.some(t=>/reclip/i.test(t.id)||/reclip-integration\\.html/i.test(t.href)),
+check(!tools.some(t=>t.id.toLowerCase().includes('reclip') || t.href.includes('reclip-integration.html')),
   'Unverified public ReClip added to catalogue');
 const cname=fs.readFileSync('CNAME','utf8').trim();
 check(cname==='www.outshark.in','CNAME does not match preferred domain');
