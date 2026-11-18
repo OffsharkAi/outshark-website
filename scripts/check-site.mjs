@@ -45,6 +45,14 @@ for(const file of toolHtml){
  const source=fs.readFileSync(file,'utf8');
  check(source.includes('tool-progress.js')||source.includes('id="progress-widget"')||source.includes('id="export-progress-wrap"'),'Tool lacks progress UI: '+file);
 }
+// Public ReClip must stay fail-closed until a separately approved server rollout.
+const reclipConfig=fs.readFileSync('assets/reclip-config.js','utf8');
+check(/window\\.OUTSHARK_RECLIP_ENABLED\\s*=\\s*false\\s*;/.test(reclipConfig),
+  'ReClip enabled without separately verified server rollout');
+check(/window\\.OUTSHARK_RECLIP_API_BASE\\s*=\\s*["']\\s*["']\\s*;/.test(reclipConfig),
+  'ReClip API configured without separately verified server rollout');
+check(!tools.some(t=>/reclip/i.test(t.id)||/reclip-integration\\.html/i.test(t.href)),
+  'Unverified public ReClip added to catalogue');
 const cname=fs.readFileSync('CNAME','utf8').trim();
 check(cname==='www.outshark.in','CNAME does not match preferred domain');
 const sitemap=fs.readFileSync('sitemap.xml','utf8');
