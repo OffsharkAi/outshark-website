@@ -1,9 +1,31 @@
-# Outshark — clean website starter
+# OUTSHARK — AI & Market Intelligence
 
-Reset on 2026-11-20 by request. The previous site, tools, scripts and integration files are archived on branch `backup/pre-reset-2026-11-20`.
+Live URL: https://www.outshark.in/
 
-The `main` branch contains only a placeholder page, a 404 page, and the GitHub Pages custom-domain record. There are no tools or ReClip frontend integrations deployed from this branch.
+This site is served by GitHub Pages from the `main` branch, and keeps the custom domain in `CNAME`.
 
-Website: https://www.outshark.in/
+## Live capabilities
 
-**Infrastructure note:** The domain and GitHub Pages connection remain configured. Cloudflare and Oracle resources are not erased by a GitHub repository reset. Keep account secrets and user data out of this repository.
+- Responsive AI and market-intelligence landing page.
+- Interactive, browser-based revenue and ROI **scenario** simulator with visitors, ad RPM, affiliate click rate, purchase conversion, average commission and monthly costs.
+- Example AI tool comparison links pointing to official vendor sites.
+- A sample editorial brief with no automated publishing claims.
+- Navigation between homepage, calculator and editorial guide.
+
+## Not yet integrated
+
+- Gemini AI automated article generation or publishing.
+- Affiliate tracking / paid referral links.
+- Display advertising, AdSense approvals or revenue measurement.
+- Email subscription, CRM, or playbook delivery.
+- Live financial or market data.
+
+The interface clearly identifies these as future features. Do not claim guaranteed profits, verified ratings, scheduled AI posting or zero production cost without evidence.
+
+## Local preview
+
+`python3 -m http.server 8000` then browse to http://localhost:8000/ .
+
+## Recovery
+
+The previous 14-tool website is archived at GitHub branch `backup/pre-reset-2026-11-20`. The Oracle server and Cloudflare tunnel are separate from this static website and were not reconfigured during the new homepage launch.
